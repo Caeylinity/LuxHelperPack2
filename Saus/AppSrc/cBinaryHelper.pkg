@@ -1,0 +1,16 @@
+Use VdfBase.pkg
+
+Class cBinaryHelper is a cObject
+    Function GetMaxEightBitCount Integer iInt Returns Integer
+        If (iInt <= (2^7) - 1) Function_Return 8
+        Else If (iInt <= (2^15) - 1) Function_Return 16
+        Else If (iInt <= (2^23) - 1) Function_Return 24
+        Else If (iInt <= (2^31) - 1) Function_Return 32
+    End_Function
+    
+    Function BitShiftLeft Integer iPositions Returns Integer
+        Integer iInt
+        Move (2^iPositions) to iInt
+        Function_Return iInt
+    End_Function
+End_Class

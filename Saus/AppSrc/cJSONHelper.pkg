@@ -1,0 +1,49 @@
+Use VdfBase.pkg
+
+Global_Variable Handle ghoJSONHelper
+Move 0 to ghoJSONHelper
+
+Class cJSONHelper is a cObject
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        
+        Move Self to ghoJSONHelper
+    End_Procedure
+    
+    { MethodType=Method }
+    Function GetJSONFromArray String[] saData Returns String
+        Handle hoJSONRoot
+        String sJSON
+        
+        Get Create (RefClass (cJsonObject)) to hoJSONRoot
+        Send InitializeJsonType of hoJSONRoot jsonTypeObject
+        Send DataTypeToJson of hoJSONRoot saData
+        Set peWhiteSpace of hoJSONRoot to jpWhitespace_Plain
+        Move (Stringify(hoJSONRoot)) to sJSON
+        Send Destroy of hoJSONRoot
+        
+        Function_Return sJSON
+    End_Function
+    
+    { MethodType=Method }
+    Function GetArrayFromJSON String sJSON Returns String[]
+        Handle hoJSONRoot
+        Boolean bOk
+        String[] saData
+        
+        If (sJSON <> "") Begin
+            Get Create (RefClass (cJsonObject)) to hoJSONRoot
+            //Send InitializeJsonType of hoJSONRoot jsonTypeObject
+            Get ParseString of hoJSONRoot sJSON to bOk
+            If (bOk) ;
+                Get JsonToDataType of hoJSONRoot to saData
+            Else ;
+                Send ClientLog ("Error parsing JSON: " + psParseError(hoJSONRoot)) //Use this for error logging
+        End
+        
+        Function_Return saData
+    End_Function
+End_Class
+
+Object oJSONHelper is a cJSONHelper
+End_Object

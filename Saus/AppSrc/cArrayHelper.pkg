@@ -1,0 +1,81 @@
+Use VdfBase.pkg
+
+Global_Variable Handle ghoArrayHelper
+Move 0 to ghoArrayHelper
+
+Class cArrayHelper is a cObject
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        
+        Move Self to ghoArrayHelper
+    End_Procedure
+    
+    { MethodType = Method }
+    Function GetDifferenceArrayStr String[] saArray1 String[] saArray2 Returns String[]
+        Integer i
+        String[] saLargest saSmallest saDiff
+        
+        If (SizeOfArray(saArray1) > SizeOfArray(saArray2)) Begin
+            Move saArray1 to saLargest
+            Move saArray2 to saSmallest
+        End
+        Else Begin
+            Move saArray2 to saLargest
+            Move saArray1 to saSmallest
+        End
+        
+        For i from 0 to (SizeOfArray(saLargest) - 1)
+            If (SearchArray(saLargest[i], saSmallest) = -1) ;
+                Move saLargest[i] to saDiff[SizeOfArray(saDiff)]
+        Loop
+        
+        Function_Return saDiff
+    End_Function
+    
+    { MethodType = Method }
+    Function GetMissingArrayEntriesStr String[] saBase String[] saCompareTo Returns String[]
+        Integer i
+        String[] saMissing
+        
+        For i from 0 to (SizeOfArray(saBase) - 1)
+            If (SearchArray(saBase[i], saCompareTo) = -1) ;
+                Move saBase[i] to saMissing[SizeOfArray(saMissing)]
+        Loop
+        
+        Function_Return saMissing
+    End_Function
+    
+    { MethodType = Method }
+    Function GetCombinedUniqueArrayStr String[] saArray1 String[] saArray2 Returns String[]
+        Integer i
+        String[] saReturn
+        
+        Move saArray1 to saReturn
+        
+        For i from 0 to (SizeOfArray(saArray2) - 1)
+            If (SearchArray(saArray2[i], saReturn) = -1) ;
+                Move saArray2[i] to saReturn[SizeOfArray(saReturn)]
+        Loop
+        
+        Function_Return saReturn
+    End_Function
+    
+    { MethodType = Method }
+    Function GetSDArrayFromMDArrayStr String[][] msaArray Integer iMDAIndex Boolean bOptTrim Returns String[]
+        Integer i
+        Boolean bTrim
+        String[] saReturn
+        
+        If (num_arguments > 2) ;
+            Move bOptTrim to bTrim
+        
+        For i from 0 to (SizeOfArray(msaArray) - 1)
+            Move (If(bTrim, Trim(msaArray[i][iMDAIndex]), msaArray[i][iMDAIndex])) to saReturn[SizeOfArray(saReturn)]
+        Loop
+        
+        Function_Return saReturn
+    End_Function
+End_Class
+
+Object oArrayHelper is a cArrayHelper
+End_Object

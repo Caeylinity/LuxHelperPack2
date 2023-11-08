@@ -1,0 +1,115 @@
+﻿Use VdfBase.pkg
+Use WindowsLocale.Pkg
+
+Global_Variable Handle ghoTimeHelper
+Move 0 to ghoTimeHelper
+
+Class cTimeHelper is a cObject
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        
+        Move Self to ghoTimeHelper
+    End_Procedure
+    
+    { MethodType=Method }
+    Function ConvertTo24Hour String sTime Returns String
+        String sNewTime iHour iMinute sMeridian iSeconds
+        String[] saTimes
+        Boolean bAddSeconds
+        
+        If (not(sTime contains ':')) Begin
+            Error DFERR_PROGRAM "Invalid format! Please enter the time in the following format: xx:xx. Negative values are possible."
+            Function_Return "Invalid time format!"
+        End
+        
+        Move (StrSplitToArray(sTime, ':')) to saTimes
+        
+        Move saTimes[0] to iHour
+        Move saTimes[1] to iMinute
+        Move False to bAddSeconds
+        
+        If (SizeOfArray (saTimes) > 2) Begin
+            Move saTimes[2] to iSeconds
+            Move True to bAddSeconds
+        End 
+        
+        If (WindowsLocaleValue(Self, LOCALE_ITIMEMARKPOSN, 10) = '0') ;
+            Move (Right(Trim(sTime), 2)) to sMeridian
+        Else If (WindowsLocaleValue(Self, LOCALE_ITIMEMARKPOSN, 10) = '1') ;
+            Move (Left(Trim(sTime), 2)) to sMeridian
+            
+        If (iSeconds >= 60) Begin
+            Move (iSeconds - 60) to iSeconds
+            Move (iMinute + 1) to iMinute
+        End
+        Else If (iSeconds < 0) Begin
+            Move (60 + iSeconds) to iSeconds
+            Move (iMinute - 1) to iMinute
+        End
+        
+        If (iMinute >= 60) Begin
+            Move (iMinute - 60) to iMinute
+            Move (iHour + 1) to iHour
+        End
+        Else If (iMinute < 0) Begin
+            Move (60 + iMinute) to iMinute
+            Move (iHour - 1) to iHour
+        End
+        
+        If (iHour < 0) ;
+            Move (24 + iHour) to iHour
+        Else If (iHour >= 24) ;
+            Move (iHour - 24) to iHour
+            
+        If (Uppercase(sMeridian) = WindowsLocaleValue(Self, LOCALE_S2359, 15) and iHour < 12) ;
+            Move (iHour + 12) to iHour
+        Else If (Uppercase(sMeridian) = WindowsLocaleValue(Self, LOCALE_S1159, 15) and iHour = 12) ;
+            Move 0 to iHour
+            
+        Move (If(iHour < 10 and Length(String(iHour)) = 1, '0' + String(iHour), String(iHour)) + ':' + If(iMinute < 10 and Length(String(iMinute)) = 1, '0' + String(iMinute), String(iMinute)) + If(iSeconds = 0 and not(bAddSeconds), "", ":") + If(iSeconds < 10 and Length(String(iSeconds)) = 1, '0' + String(iSeconds), String(iSeconds))) to sNewTime
+        Function_Return sNewTime
+    End_Function
+
+    Function ConvertTo12Hour String sTime Returns String
+        String sNewTime iHour iMinute
+        
+        //Convert to 24-hour first to get rid of anomalies like "-1:30" and "26:00"
+        Get ConvertTo24Hour sTime to sNewTime
+        
+        Move (Cast(Mid(sNewTime, 2, 1), Integer)) to iHour
+        Move (Cast(Mid(sNewTime, 2, 4), Integer)) to iMinute
+        
+        If (iHour >= 0 and iHour <= 11) Begin
+            If (iHour = 0) ;
+                Move 12 to iHour
+            Move (If(iHour < 10, '0' + String(iHour), String(iHour)) + ':' + If(iMinute < 10, '0' + String(iMinute), String(iMinute)) + " AM") to sNewTime
+        End
+        Else If (iHour >= 12 and iHour <= 23) Begin
+            Move (iHour - 12) to iHour
+            If (iHour = 0) ;
+                Move 12 to iHour
+            Move (If(iHour < 10, '0' + String(iHour), String(iHour)) + ':' + If(iMinute < 10, '0' + String(iMinute), String(iMinute)) + " PM") to sNewTime
+        End
+        
+        Function_Return sNewTime
+    End_Function
+    
+    Function GetCurrentDateTimeFileFriendly Returns String
+        String sFileFriendlyDateTime
+        DateTime dtNow
+        
+        Move (CurrentDateTime()) to dtNow
+        Move (String(DateGetYear(dtNow))) to sFileFriendlyDateTime
+        Move (sFileFriendlyDateTime + "-" + String(DateGetMonth(dtNow))) to sFileFriendlyDateTime
+        Move (sFileFriendlyDateTime + "-" + String(DateGetDay(dtNow))) to sFileFriendlyDateTime
+        Move (sFileFriendlyDateTime + "_") to sFileFriendlyDateTime
+        Move (sFileFriendlyDateTime + "-" + String(DateGetHour(dtNow))) to sFileFriendlyDateTime
+        Move (sFileFriendlyDateTime + "-" + String(DateGetMinute(dtNow))) to sFileFriendlyDateTime
+        Move (sFileFriendlyDateTime + "-" + String(DateGetSecond(dtNow))) to sFileFriendlyDateTime
+        
+        Function_Return sFileFriendlyDateTime
+    End_Function
+End_Class
+
+Object oTimeHelper is a cTimeHelper
+End_Object

@@ -1,0 +1,119 @@
+Use VdfBase.pkg
+Use WindowsLocale.Pkg
+Use cDirectoryHelper.pkg
+Use cTimeHelper.pkg
+Use seq_chnl.pkg
+
+Define C_$LogExtension for ".txt"
+
+Class cWebLogger is a cWebObject
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        
+        Property String psRelativeLogFolderPath "Logs\"
+        Property String psLatestLog ""
+        Property String psLogPrefix ""
+        
+        { Visibility = Private }
+        Property String psErrorLog "ErrorLog"
+        
+        { Visibility = Private }
+        Property String psFullLogPath
+    End_Procedure
+    
+    { Visibility = Private }
+    Procedure CreateErrorLog
+        Boolean bFileExists
+        String sErrorLog sPrevErrorLog sBaseLogPath sFullLogPath
+        DateTime dtNow
+        
+        Get psErrorLog to sErrorLog
+        Get psFullLogPath to sBaseLogPath
+        Move (sBaseLogPath + sErrorLog + C_$LogExtension) to sFullLogPath
+        
+//        File_Exist sFullLogPath bFileExists
+//        If (bFileExists) Begin
+//            Move (sErrorLog + "_" + sDateTimeNow + "_UID_" + String(Random(1000000)) + C_$LogExtension) to sPrevErrorLog
+//            RenameFile sFullLogPath to sPrevErrorLog
+//        End
+        
+        //EraseFile sFullLogPath
+        String sDateTimeNow
+        Get GetCurrentDateTimeFileFriendly of oTimeHelper to sDateTimeNow
+        Send CreateLog (sBaseLogPath + sErrorLog + "_" + sDateTimeNow + "_UID_" + String(Random(1000000)) + C_$LogExtension)
+    End_Procedure
+    
+    { Visibility = Private }
+    Procedure CreateLog String sName
+        Integer iChOut iProcessNr
+        String sFullLogPath
+        
+        If (Right(sName, Length(C_$LogExtension)) <> C_$LogExtension) Move (sName + C_$LogExtension) to sName
+        
+        Move (Seq_New_Channel()) to iChOut
+        If (iChOut = DF_SEQ_CHANNEL_NOT_AVAILABLE) Begin
+            //Not available
+            Procedure_Return
+        End
+        
+        Get psFullLogPath to sFullLogPath
+        Append_Output channel iChOut (sFullLogPath + sName)
+        Writeln channel iChOut ("[Server | " + String(CurrentDateTime()) + "] Starting log...")
+        
+        Close_Output channel iChOut
+        Send Seq_Release_Channel iChOut
+        
+        //Save log name so it can be used to log things later
+        Set psLatestLog to (sFullLogPath + sName)
+    End_Procedure
+    
+    Procedure Log String sText Boolean bClientLog
+        Integer iChOut
+        Boolean bLogExists
+        String sFullLogPath sLogPath
+        
+        Get psLatestLog to sLogPath
+        File_Exist sLogPath bLogExists
+        If (not(bLogExists)) Begin
+            //Throw "log does not exist" error here
+            Procedure_Return
+        End
+        
+        Move (Seq_New_Channel()) to iChOut
+        If (iChOut = DF_SEQ_CHANNEL_NOT_AVAILABLE) Begin
+            //Not available
+            Procedure_Return
+        End
+        
+        Get psFullLogPath to sFullLogPath
+        Move ("[Server | " + String(CurrentDateTime()) + "]" + sText) to sText
+        Append_Output channel iChOut sLogPath
+        Writeln channel iChOut sText
+        
+        Close_Output channel iChOut
+        Send Seq_Release_Channel iChOut
+        
+        #IFDEF is$WebApp
+            If (num_arguments > 1 and bClientLog = True) Send ClientLog sText
+        #ENDIF
+    End_Procedure
+    
+    Procedure End_Construct_Object
+        Forward Send End_Construct_Object
+        
+        String sFullLogPath sRelativeLogFolderPath
+        Get WorkspaceRoot of oDirectoryHelper True to sFullLogPath
+        Get psRelativeLogFolderPath to sRelativeLogFolderPath
+        Set psFullLogPath to (sFullLogPath + sRelativeLogFolderPath)
+        
+        //Send CreateErrorLog
+        
+        Integer iUID
+        String sDateTimeNow sName sLogPrefix
+        Get GetCurrentDateTimeFileFriendly of oTimeHelper to sDateTimeNow
+        Get psLogPrefix to sLogPrefix
+        Move (sLogPrefix + "_LOG_" + sDateTimeNow + "_UID_" + String(Random(1000000))) to sName
+        
+        Send CreateLog sName
+    End_Procedure
+End_Class

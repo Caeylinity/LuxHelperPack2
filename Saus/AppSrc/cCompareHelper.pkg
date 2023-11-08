@@ -1,0 +1,57 @@
+Use VdfBase.pkg
+
+Global_Variable Handle ghoCompareHelper
+Move 0 to ghoCompareHelper
+
+Class cCompareHelper is a cObject
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        
+        Move Self to ghoCompareHelper
+    End_Procedure
+    
+    { MethodType=Method }
+    Function IsInteger String sData Returns Boolean
+        Integer iPos iChars
+        String sChar
+        
+        Move (Length (sData)) to iChars
+        For iPos from 1 to iChars
+            Move (Mid(sData, 1, iPos)) to sChar
+            If (not('0123456789' contains sChar)) Begin
+                Function_Return False
+            End
+        Loop
+        Function_Return True
+    End_Function
+    
+    { MethodType=Method }
+    Function ContainsInteger String sData Returns Boolean
+        Integer iPos iChars
+        String sChar
+        
+        Move (Length (sData)) to iChars
+        For iPos from 1 to iChars
+            Move (Mid(sData, 1, iPos)) to sChar
+            If ('0123456789' contains sChar) Begin
+                Function_Return True
+            End
+        Loop
+        Function_Return False
+    End_Function
+    
+    { MethodType=Method }
+    Function IsBoolean String sData Returns Boolean
+        String sChar
+        
+        If (Length(sData) > 1) Function_Return False
+        Else Begin
+            Move sData to sChar
+            If (IsInteger(sChar) and (sChar = '0' or sChar = '1')) Function_Return True
+            Else Function_Return False
+        End
+    End_Function
+End_Class
+
+Object oCompareHelper is a cCompareHelper
+End_Object

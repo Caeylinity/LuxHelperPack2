@@ -1,0 +1,10 @@
+{
+    "description": "Handy helper classes Lorum Ipsum enzo 22222",
+    "df": 99.0,
+    "df-max": 99.3,
+    "df-min": 20.1,
+    "is64Bit": true,
+    "version": "3.05",
+    "workspaceName": "LuxHelperPack",
+	"icon": "HelperPack.ico"
+}

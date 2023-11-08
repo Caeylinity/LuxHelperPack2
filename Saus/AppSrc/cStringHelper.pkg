@@ -1,0 +1,111 @@
+Use VdfBase.pkg
+
+Global_Variable Handle ghoStringHelper
+Move 0 to ghoStringHelper
+
+Define C_DefaultItemMaxChars for 20
+
+Register_Function PluralizeEnglish String sInput Returns String
+
+Object oPluralDictionary is a cDictionary
+    Procedure OnInitializeData
+        Send AddPairSeparate "EN" (RefFunc(PluralizeEnglish))
+        Send AddPairSeparate "ENG" (RefFunc(PluralizeEnglish))
+    End_Procedure
+End_Object
+
+Class cStringHelper is a cObject
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        
+        Move Self to ghoStringHelper
+    End_Procedure
+    
+    { MethodType=Method }
+    Function FormatLastName String sNameToFormat Returns String
+        String sNewName sNamePrefix
+        
+        If (Lowercase(Mid(sNameToFormat, 2, 1)) = "mc") Begin
+            Get FormatName "mc" to sNamePrefix
+            Move (Remove(sNameToFormat, 1, 2)) to sNameToFormat
+        End
+        Else If (Lowercase(Mid(sNameToFormat, 3, 1)) = "mac") Begin
+            Get FormatName "mac" to sNamePrefix
+            Move (Remove(sNameToFormat, 1, 3)) to sNameToFormat
+        End
+        
+        Get FormatName sNameToFormat to sNewName
+        Move (sNamePrefix + sNewName) to sNewName
+        Function_Return sNewName
+    End_Function
+    
+    { Visibility=Private }
+    { MethodType=Method }
+    Function FormatName String sOldName Returns String
+        Integer iCharIndex
+        String sNewName
+        
+        For iCharIndex from 1 to (Length(sOldName))
+            If (iCharIndex = 1) Move (Uppercase(Mid(sOldName, 1, iCharIndex))) to sNewName
+            Else Begin
+                Move (sNewName + (Lowercase(Mid(sOldName, 1, iCharIndex)))) to sNewName
+            End
+        Loop
+        
+        Function_Return sNewName
+    End_Function
+    
+    { MethodType=Method }
+    Function GetShortenedName String sItemName Integer iOptMaxChars Returns String
+        Integer iLength iMaxLength
+        String sResult
+        
+        Move (Trim(sItemName)) to sItemName
+        
+        Move (Length(RTrim(sItemName))) to iLength
+        Move (Cast(If(num_arguments > 1, String(iOptMaxChars), String(C_DefaultItemMaxChars)), Integer)) to iMaxLength
+        If (iLength > iMaxLength) ;
+            Move (Left(sItemName, iMaxLength) + "...") to sResult
+        Else ;
+            Move sItemName to sResult
+            
+        Function_Return sResult
+    End_Function
+    
+    { MethodType=Method }
+    Function Pluralize String sLanguage String sInput Returns String
+        Handle hmProc
+        String sOutput
+        
+        If (ContainsKey(oPluralDictionary, Uppercase(sLanguage)) <> -1) Begin
+            Get GetValue of oPluralDictionary (Uppercase(sLanguage)) to hmProc
+            Get hmProc sInput to sOutput
+        End
+        Else ;
+            Function_Return sInput
+        
+        Function_Return sOutput
+    End_Function
+    
+    { Visibility = Private }
+    Function PluralizeEnglish String sInput Returns String
+        String sLastChar sLastChars sOutput
+        
+        Move (Trim(sInput)) to sInput
+        
+        Move (Lowercase(Right(sInput, 1))) to sLastChar
+        Move (Lowercase(Right(sInput, 2))) to sLastChars
+        
+        If (sLastChar = 'y') ;
+            Move (Left(sInput, Length(sInput) - 1) + "ies") to sOutput
+        Else If (sLastChar = 's' or sLastChar = 'x' or sLastChar = 'z' or sLastChars = "ss" or sLastChars = "sh" or sLastChars = "ch") ;
+            Move (sInput + "es") to sOutput
+        Else ;
+            Move (sInput + 's') to sOutput
+        
+        Function_Return sOutput
+    End_Function
+End_Class
+
+Object oStringHelper is a cStringHelper
+End_Object

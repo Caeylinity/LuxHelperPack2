@@ -1,0 +1,20 @@
+Use VdfBase.pkg
+
+Class cDirectoryHelper is a cObject
+    Function WorkspaceRoot Boolean bWithBackslash Returns String
+        String sFileName sWSRoot
+        Handle hoWorkspace
+    
+        Get phoWorkspace of ghoApplication to hoWorkspace
+        Get psHome of hoWorkspace to sWSRoot
+        If (bWithBackslash) Begin
+            If (Right(sWSRoot, 1) <> SysConf(SYSCONF_DIR_SEPARATOR)) Move (sWSRoot - SysConf(SYSCONF_DIR_SEPARATOR)) to sWSRoot
+        End
+        Else If (Right(sWSRoot, 1) = SysConf(SYSCONF_DIR_SEPARATOR)) Move (Remove(sWSRoot, (Length(sWSRoot)), 1)) to sWSRoot
+        
+        Function_Return sWSRoot
+    End_Function
+End_Class
+
+Object oDirectoryHelper is a cDirectoryHelper
+End_Object

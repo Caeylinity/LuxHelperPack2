@@ -1,0 +1,122 @@
+Use VdfBase.pkg
+
+Define C_$DictionaryKeyNotFound for "The provided key: %1 was not found in the dictionary!"
+Define C_$IndexOutOfBoundsException for "Index out of bounds! The provided index is larger than the pair list size."
+
+Struct tKvPair
+    Variant vKey
+    Variant vValue
+End_Struct
+
+Class cDictionary is a cObject
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        
+        { Visibility = Private }
+        Property tKvPair[] ptaKvPairs
+    End_Procedure
+    
+    //Add a KeyValuePair to the dictionary
+    Procedure AddPair tKvPair tPair
+        tKvPair[] taKvPairs
+        Integer iKeyIndex
+        
+        //If the dictionary does not contain a key with this value yet, add it. Otherwise throw an error
+        Get ContainsKey tPair.vKey to iKeyIndex
+        If (iKeyIndex = -1) Begin
+            Get ptaKvPairs to taKvPairs
+            Move tPair to taKvPairs[SizeOfArray(taKvPairs)]
+            Set ptaKvPairs to taKvPairs
+        End
+        Else ;
+            Error DFERR_PROGRAM (SFormat(C_$DictionaryKeyNotFound, tPair.vKey))
+    End_Procedure
+    
+    //Add a KeyValuePair to the datadictionary by passing the key and value separately
+    Procedure AddPairSeparate Variant vKey Variant vValue
+        tKvPair tKVPair
+        
+        Move vKey to tKVPair.vKey
+        Move vValue to tKVPair.vValue
+        
+        Send AddPair tKVPair
+    End_Procedure
+    
+    //Check if the dictionary already contains a given key. Returns -1 if no key was found
+    Function ContainsKey Variant vKey Returns Integer
+        tKvPair[] taKvPairs
+        Integer i iPairCount
+        
+        Get ptaKvPairs to taKvPairs
+        Move (SizeOfArray(taKvPairs)) to iPairCount
+        
+        For i from 0 to (iPairCount - 1)
+            If (taKvPairs[i].vKey = vKey) Function_Return i
+        Loop
+        
+        Function_Return -1
+    End_Function
+    
+    //Get a value from the dictionary belonging to a given key
+    Function GetValue Variant vKey Returns Variant
+        tKvPair[] taKvPairs
+        Integer iKeyIndex
+        
+        Get ContainsKey vKey to iKeyIndex
+        //If the index exists, return the value belonging to that index.
+        //Else, throw an error stating that they key does not exist in the dictionary
+        If (iKeyIndex <> -1) Begin
+            Get ptaKvPairs to taKvPairs
+            Function_Return taKvPairs[iKeyIndex].vValue
+        End
+        Else Begin
+            Error DFERR_PROGRAM (SFormat(C_$DictionaryKeyNotFound, vKey))
+            Function_Return -1
+        End
+    End_Function
+    
+    //Get the kvPair belonging to a given index
+    Function GetKvPairByIndex Integer iIndex Returns tKvPair
+        tKvPair[] taKvPairs
+        
+        Get ptaKvPairs to taKvPairs
+        
+        //Let the DF system throw an error if the index is too large
+        Function_Return taKvPairs[iIndex]
+    End_Function
+    
+    Function GetFirstKey Returns Variant
+        tKvPair tKVPair
+        
+        Get GetKvPairByIndex 0 to tKVPair
+        Function_Return tKVPair.vKey
+    End_Function
+    
+    Function GetLastKey Returns Variant
+        tKvPair[] taKvPairs
+        tKvPair tKVPair
+        
+        Get ptaKvPairs to taKvPairs
+        Get GetKvPairByIndex (SizeOfArray(taKvPairs) - 1) to tKVPair
+        
+        Function_Return tKVPair.vKey
+    End_Function
+    
+    Function GetCount Returns Integer
+        tKvPair[] taKvPairs
+        
+        Get ptaKvPairs to taKvPairs
+        
+        Function_Return (SizeOfArray(taKvPairs))
+    End_Function
+    
+    Procedure OnInitializeData
+        //Stub
+    End_Procedure
+    
+    Procedure End_Construct_Object
+        Forward Send End_Construct_Object
+        
+        Send OnInitializeData
+    End_Procedure
+End_Class

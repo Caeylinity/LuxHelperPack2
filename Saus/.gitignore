@@ -1,0 +1,11 @@
+IdeSrc/
+Docs/
+Programs/WebApp.log
+.vscode/
+AppSrc/*.dep
+AppSrc/*.prn
+Programs/*.dbg
+Programs/*.exe
+Programs/*.exe.manifest`
+Data/DFConnId.ini
+Data/reindex.log
