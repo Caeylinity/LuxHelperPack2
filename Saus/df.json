@@ -1,10 +1,33 @@
 {
-    "description": "Handy helper classes Lorum Ipsum enzo 22222",
+    "description": "Handy helper classes Lorum Ipsum enzo",
     "df": 99.0,
     "df-max": 99.3,
     "df-min": 20.1,
     "is64Bit": true,
-    "version": "3.05",
-    "workspaceName": "LuxHelperPack2",
-	"icon": "HelperPack.ico"
+    "version": "1.48",
+    "workspaceName": "LuxHelperPack",
+	"icon": "HelperPack.ico",
+	"shortDescription": "Lekker korte beschrijving hopsakee",
+	"paths": {
+		"appHtml": "AppHtml",
+		"programs": "Programs"
+	},
+	"install": [
+	{
+		"path": "${AppHtml}\\Custom"
+	},
+	{
+		"path": "${Programs}\\TestDLL (definitely not a text file)_2.dll"
+	},
+	{
+		"path": "${AppHtml}\\LHP\\LHP_TEST_FILE_2.js"
+	}
+	],
+	"htmlIncludes" : [
+		"Custom\\test3.css",
+		{
+			"file": "Custom\\test4.js",
+			"fileType": "js"
+		}
+	]
 }
